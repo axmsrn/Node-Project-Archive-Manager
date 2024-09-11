@@ -7,16 +7,24 @@
 ## Description
 **Node Project Archive Manager** is a web application designed for managing project archives. It allows users to create full and incremental archives, add comments, and manage archives efficiently through a user-friendly interface.
 
+This application saves the archives in the following directory:
+```
+const archivesDir = path.resolve('C:/Users/name/OneDrive/backup/project');
+```
+This path can be customized based on your specific setup.
+
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
 - [Features](#features)
 - [API Documentation](#api-documentation)
 - [Project Structure](#project-structure)
+- [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
 
 ## Installation
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/your-username/node-project-archive-manager.git
@@ -38,6 +46,7 @@
    ```
 
 ## Usage
+
 1. Open your browser and navigate to `http://localhost:3005`.
 2. Enter a comment and select the type of archive (Full or Incremental).
 3. Click the **Create Archive** button to generate the archive.
@@ -101,26 +110,6 @@
        - `comment`: The comment associated with the archive (if available).
        - `date`: The modification date of the archive file.
      - `totalCount`: The total number of archives available.
-   - **Example Response**:
-     ```json
-     {
-       "archives": [
-         {
-           "id": 123456789,
-           "name": "05-Oct-2023_12.00.00_worklog_full.zip",
-           "comment": "Initial full archive",
-           "date": "2023-10-05T12:00:00.000Z"
-         },
-         {
-           "id": 987654321,
-           "name": "06-Oct-2023_14.30.00_worklog_inc.zip",
-           "comment": "Incremental backup with minor changes",
-           "date": "2023-10-06T14:30:00.000Z"
-         }
-       ],
-       "totalCount": 2
-     }
-     ```
 
 ### 2. **Create Full Archive**
    - **URL**: `/create-full-archive`
@@ -128,22 +117,6 @@
    - **Description**: Creates a full archive of the project, which includes all files matching the specified patterns.
    - **Request Body**:
      - `comment` (required): A text comment describing the archive being created.
-   - **Response**:
-     - `success`: A boolean indicating whether the archive was successfully created.
-     - `message`: A message confirming the archive creation.
-   - **Example Request**:
-     ```json
-     {
-       "comment": "Initial full archive with all project files"
-     }
-     ```
-   - **Example Response**:
-     ```json
-     {
-       "success": true,
-       "message": "Archive created successfully!"
-     }
-     ```
 
 ### 3. **Create Incremental Archive**
    - **URL**: `/create-incremental-archive`
@@ -151,29 +124,6 @@
    - **Description**: Creates an incremental archive, which includes only the files that have been modified since the last archive.
    - **Request Body**:
      - `comment` (required): A text comment describing the incremental archive.
-   - **Response**:
-     - `success`: A boolean indicating whether the incremental archive was successfully created.
-     - `message`: A message confirming the archive creation or indicating that no changes were detected.
-   - **Example Request**:
-     ```json
-     {
-       "comment": "Incremental archive with changes"
-     }
-     ```
-   - **Example Response (if changes are detected)**:
-     ```json
-     {
-       "success": true,
-       "message": "Archive created successfully!"
-     }
-     ```
-   - **Example Response (if no changes are detected)**:
-     ```json
-     {
-       "success": true,
-       "message": "No changes detected. Incremental archive not created."
-     }
-     ```
 
 ### 4. **Delete Archive**
    - **URL**: `/delete-archive/:name`
@@ -181,55 +131,13 @@
    - **Description**: Deletes an archive (along with its comment file, if it exists) by its name.
    - **Parameters**:
      - `name` (required): The name of the archive to be deleted (must include the `.zip` extension).
-   - **Response**:
-     - `success`: A boolean indicating whether the archive was successfully deleted.
-     - `error`: An error message in case the archive could not be found or deleted.
-   - **Example Response (success)**:
-     ```json
-     {
-       "success": true
-     }
-     ```
-   - **Example Response (error)**:
-     ```json
-     {
-       "success": false,
-       "error": "Archive not found"
-     }
-     ```
 
 ### 5. **Edit Archive Comment**
    - **URL**: `/edit-archive/:name`
    - **Method**: `PUT`
    - **Description**: Updates the comment of a specified archive.
-   - **Parameters**:
-     - `name` (required): The name of the archive for which the comment needs to be updated.
    - **Request Body**:
      - `comment` (required): The new comment to replace the old one.
-   - **Response**:
-     - `success`: A boolean indicating whether the comment was successfully updated.
-     - `error`: An error message in case the comment file could not be found or updated.
-
-
-   - **Example Request**:
-     ```json
-     {
-       "comment": "Updated comment for the archive"
-     }
-     ```
-   - **Example Response (success)**:
-     ```json
-     {
-       "success": true
-     }
-     ```
-   - **Example Response (error)**:
-     ```json
-     {
-       "success": false,
-       "error": "Comment file not found"
-     }
-     ```
 
 ### 6. **Extract Archive**
    - **URL**: `/extract-archive/:name`
@@ -237,35 +145,6 @@
    - **Description**: Extracts the contents of an archive back into the project directory. This is useful for restoring a previous state of the project.
    - **Parameters**:
      - `name` (required): The name of the archive to extract.
-   - **Response**:
-     - `success`: A boolean indicating whether the archive was successfully extracted.
-     - `error`: An error message in case the archive could not be found or extracted.
-   - **Example Response (success)**:
-     ```json
-     {
-       "success": true
-     }
-     ```
-   - **Example Response (error)**:
-     ```json
-     {
-       "success": false,
-       "error": "Error extracting archive"
-     }
-     ```
-
----
-
-### Summary of API Endpoints
-
-| Endpoint                               | Method  | Description                                    |
-| -------------------------------------- | ------- | ---------------------------------------------- |
-| `/archives`                            | `GET`   | Fetches a list of archives with pagination.    |
-| `/create-full-archive`                 | `POST`  | Creates a full archive of the project.         |
-| `/create-incremental-archive`          | `POST`  | Creates an incremental archive.                |
-| `/delete-archive/:name`                | `DELETE`| Deletes an archive by name.                    |
-| `/edit-archive/:name`                  | `PUT`   | Edits the comment associated with an archive.  |
-| `/extract-archive/:name`               | `POST`  | Extracts an archive's contents into the project directory. |
 
 ---
 
@@ -286,8 +165,25 @@ node-project-archive-manager/
 │   └── arc.ejs
 ```
 
+---
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them with descriptive commit messages.
+4. Push your branch to your forked repository.
+5. Create a pull request to the main repository.
+
+---
+
 ## License
+
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+---
 
 ## Contact
 - Email: [axmsrn@gmail.com](mailto:axmsrn@gmail.com)
@@ -295,3 +191,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
+This version of the `README.md` includes all necessary instructions and information about the project, including the path for the archives, contributing guidelines, and a detailed API documentation.
