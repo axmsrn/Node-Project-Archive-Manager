@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArchiveManager - <%= projectName %></title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="css/archive.css" />
+  </head>
+  <body class="bg-dark text-light pb-5">
+    <div class="container mt-5">
+      <h1 class="mb-4 text-center">Node Project Archive Manager - <%= projectName %></h1>
+      <form id="archiveForm" class="">
+        <div class="mb-3">
+          <label for="comment" class="form-label">Comment</label>
+          <textarea
+            class="form-control bg-dark"
+            id="comment"
+            name="comment"
+            rows="3"
+            required
+            style="
+              resize: vertical;
+              overflow: hidden;
+              transition: height 0.3s ease;
+            "
+          ></textarea>
+        </div>
+
+        <div class="mb-3 pt-5 pb-4">
+          <div
+            class="btn-group w-100 gap-3"
+            role="group"
+            aria-label="Basic radio toggle button group"
+          >
+            <input
+              type="radio"
+              class="btn-check"
+              name="archiveType"
+              id="fullArchive"
+              autocomplete="off"
+              value="full"
+              checked
+            />
+            <label
+              class="btn btn-outline-secondary w-50 rounded"
+              for="fullArchive"
+              >Full Archive</label
+            >
+            <input
+              type="radio"
+              class="btn-check"
+              name="archiveType"
+              id="incrementalArchive"
+              autocomplete="off"
+              value="incremental"
+            />
+            <label
+              class="btn btn-outline-secondary w-50 rounded"
+              for="incrementalArchive"
+              >Incremental Archive</label
+            >
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">
+          Create Archive
+        </button>
+        <div id="statusMessage" class="mt-3 text-info"></div>
+        <div id="progressContainer" class="progress-container mt-3">
+          <div class="progress">
+            <div
+              id="progressBar"
+              class="progress-bar"
+              role="progressbar"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              style="width: 0%"
+            ></div>
+          </div>
+        </div>
+      </form>
+      <div class="table-responsive">
+        <table class="table table-dark table-striped">
+          <thead>
+            <tr>
+              <th scope="col" class="col-auto text-center">Name</th>
+              <th scope="col" class="col text-center">Comment</th>
+              <th scope="col" class="w-auto text-center">Extract</th>
+              <th scope="col" class="w-auto text-center">Delete</th>
+            </tr>
+          </thead>
+          <tbody id="archiveList">
+            <!-- Archive buttons will be added here via JavaScript -->
+          </tbody>
+        </table>
+        <nav aria-label="Archive pagination">
+          <ul class="pagination justify-content-center" id="pagination">
+            <!-- Pagination items will be generated here -->
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <script>
+      // Dynamically set the project name if provided from the server or use default
+      const projectName = "<%= projectName %>" || "Unknown Project";
+      document.title = `ArchiveManager - ${projectName}`;
+      document.querySelector('h1').textContent = `Node Project Archive Manager - ${projectName}`;
+    </script>
+  </body>
+</html>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Get DOM elements
+        const archiveList = document.getElementById('archiveList'),
+          progressContainer = document.getElementById('progressContainer'),
+          progressBar = document.getElementById('progressBar'),
+          statusMessage = document.getElementById('statusMessage'),
+          archiveForm = document.getElementById('archiveForm'),
+          commentField = document.getElementById('comment'),
+          pagination = document.getElementById('pagination');
+
+        // Initialize variables
+        let updateInterval = 10; // Update interval for progress bar (ms)
+        let currentArchiveName = null, // Name of the archive being edited
+          originalComment = '', // Original comment before editing
+          isLoading = false, // Flag to track if a request is in progress
+          currentPage = 1, // Current page for pagination
+          pageSize = 16; // Number of archives to display per page
+
+        let initialTextareaHeight = commentField.scrollHeight + 'px'; // Store initial textarea height
+
+        // Debounce function for optimizing event listeners
+        const debounce = (func, delay) => {
+          let timeoutId;
+          return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func(...args), delay);
+          };
+        };
+
+        // Function to update the progress bar
+        const updateProgressBar = (percentage) => {
+          progressBar.style.width = `${percentage}%`;
+          progressBar.setAttribute('aria-valuenow', percentage);
+        };
+
+        // Function for smooth progress bar animation
+        const smoothProgressUpdate = (start, end, duration) => {
+          const increment = (end - start) / (duration / 20);
+          let currentProgress = start;
+          const interval = setInterval(() => {
+            currentProgress += increment;
+            if (
+              (increment > 0 && currentProgress >= end) ||
+              (increment < 0 && currentProgress <= end)
+            ) {
+              clearInterval(interval);
+              currentProgress = end;
+            }
+            updateProgressBar(currentProgress);
+          }, updateInterval);
+        };
+
+        // Generic function to send requests to the server
+        const sendRequest = async (
+          url,
+          options,
+          successMessage,
+          errorMessage,
+          callback,
+          withProgress = false,
+        ) => {
+          if (isLoading) return;
+          isLoading = true;
+
+          try {
+            showStatusMessage('Loading...');
+            if (withProgress) {
+              progressContainer.classList.add('show');
+              smoothProgressUpdate(0, 50, 750);
+              await new Promise((resolve) => setTimeout(resolve, 500));
+            }
+
+            const response = await fetch(url, options);
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+              throw new Error(data.message || `HTTP error: ${response.status}`);
+            }
+
+            showStatusMessage(successMessage);
+            callback?.(data);
+          } catch (error) {
+            showStatusMessage(errorMessage || error.message, true);
+          } finally {
+            if (withProgress) {
+              smoothProgressUpdate(50, 100, 500);
+              setTimeout(() => progressContainer.classList.remove('show'), 500);
+            }
+            isLoading = false;
+          }
+        };
+
+        // Function to display status messages to the user
+        const showStatusMessage = (message, isError = false) => {
+          statusMessage.textContent = message;
+          statusMessage.classList.toggle('text-danger', isError);
+          statusMessage.classList.toggle('text-success', !isError);
+          statusMessage.classList.add('show');
+          setTimeout(() => {
+            statusMessage.classList.remove('show');
+          }, 3000);
+        };
+
+        // Handle form submission for creating archives
+        archiveForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+
+          const comment = commentField.value;
+          const archiveType = document.querySelector(
+            'input[name="archiveType"]:checked',
+          ).value;
+
+          let showProgress = archiveType !== 'incremental';
+
+          await sendRequest(
+            `/create-${archiveType}-archive`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ comment }),
+            },
+            'Archive created successfully!',
+            'Error creating archive.',
+            (data) => {
+              // Handle response after archive creation
+              if (
+                data.message ===
+                'No changes detected. Incremental archive not created.'
+              ) {
+                showProgress = false;
+              }
+
+              if (data.archive) {
+                appendNewArchive(data.archive);
+              } else if (data.message) {
+                showStatusMessage(data.message, !data.success);
+              }
+
+              // Reload archive list
+              if (currentPage !== 1) {
+                debouncedLoadArchives(1);
+              } else {
+                debouncedLoadArchives(currentPage);
+              }
+
+              // Clear the comment field and reset textarea height
+              commentField.value = '';
+              commentField.style.height = initialTextareaHeight; // Reset to initial height
+            },
+            showProgress,
+          );
+        });
+
+        // Function to append a new archive to the archive list
+        const appendNewArchive = ({ name, comment }) => {
+          const row = archiveList.insertRow();
+          const truncatedComment =
+            comment.length > 100 ? `${comment.slice(0, 100)}...` : comment;
+
+          row.innerHTML = `
+    <td class="text-nowrap text-center">
+      <a href="/archives/${name}" class="text-info">${name}</a>
+    </td>
+    <td>
+      <span class="badge bg-info text-dark text-wrap text-start d-block comment-badge"
+            data-name="${name}"
+            data-full-comment="${comment}">${truncatedComment}</span>
+    </td>
+    <td class="w-auto text-end">
+      <button class="btn btn-primary btn-sm extract-archive w-100" data-name="${name}">Extract</button>
+    </td>
+    <td class="w-auto text-end">
+      <button class="btn btn-danger btn-sm delete-archive w-100" data-name="${name}">Delete</button>
+    </td>
+  `;
+        };
+
+        // Function to load and display archives
+        const loadArchives = async (page = 1) => {
+          if (isLoading) return;
+          isLoading = true;
+          currentPage = page;
+
+          try {
+            const response = await fetch(
+              `/archives?page=${page}&pageSize=${pageSize}`,
+            );
+            const data = await response.json();
+
+            archiveList.innerHTML = '';
+            data.archives.forEach(appendNewArchive);
+            updatePaginationControls(
+              currentPage,
+              Math.ceil(data.totalCount / pageSize),
+            );
+          } catch (error) {
+            console.error('Fetch error:', error);
+            showStatusMessage('Error loading archives.', true);
+          } finally {
+            isLoading = false;
+          }
+        };
+
+        // Load archives on page load
+        const debouncedLoadArchives = debounce(loadArchives, 300);
+        debouncedLoadArchives();
+
+        // Function to update the pagination controls
+        const updatePaginationControls = (currentPage, totalPages) => {
+          pagination.innerHTML = '';
+
+          const createPageLink = (page, label = page, isActive = false) => {
+            const li = document.createElement('li');
+            li.className = `page-item ${isActive ? 'active' : ''}`;
+            const a = document.createElement('a');
+            a.className = 'page-link bg-dark text-light border-secondary';
+            a.href = '#';
+            a.dataset.page = page;
+            a.textContent = label;
+            a.addEventListener('click', (event) => {
+              event.preventDefault();
+              const clickedPage = parseInt(
+                event.target.closest('a').dataset.page,
+                10,
+              );
+              if (clickedPage >= 1 && clickedPage <= totalPages) {
+                debouncedLoadArchives(clickedPage);
+              }
+            });
+            li.appendChild(a);
+            return li;
+          };
+
+          pagination.appendChild(
+            createPageLink(currentPage - 1, '«', currentPage === 1),
+          );
+
+          for (let i = 1; i <= totalPages; i++) {
+            pagination.appendChild(createPageLink(i, i, i === currentPage));
+          }
+
+          pagination.appendChild(
+            createPageLink(currentPage + 1, '»', currentPage === totalPages),
+          );
+        };
+
+        // Function to reset comment field and its height
+        const resetCommentField = () => {
+          commentField.value = '';
+          currentArchiveName = null;
+          originalComment = '';
+          commentField.style.height = initialTextareaHeight; // Reset height to initial
+        };
+
+        // Event delegation for handling archive actions (delete, extract)
+        archiveList.addEventListener('click', async (event) => {
+          const target = event.target;
+          const name = target.dataset.name;
+
+          if (target.classList.contains('delete-archive')) {
+            if (confirm(`Are you sure you want to delete ${name}?`)) {
+              await sendRequest(
+                `/delete-archive/${name}`,
+                { method: 'DELETE' },
+                'Archive deleted successfully!',
+                'Error deleting archive.',
+                () => debouncedLoadArchives(currentPage),
+              );
+            }
+          }
+
+          if (target.classList.contains('extract-archive')) {
+            await sendRequest(
+              `/extract-archive/${name}`,
+              { method: 'POST' },
+              'Archive extracted successfully!',
+              'Error extracting archive.',
+              () => debouncedLoadArchives(currentPage),
+              true, // Show progress bar for extraction
+            );
+          }
+        });
+
+        // Handle clicks on comment badges to edit comments
+        archiveList.addEventListener('click', (event) => {
+          const target = event.target;
+
+          if (target.classList.contains('comment-badge')) {
+            const name = target.dataset.name;
+            const fullComment = target.dataset.fullComment;
+
+            commentField.value = fullComment;
+            originalComment = fullComment;
+            currentArchiveName = name;
+
+            // Update textarea height
+            debouncedUpdateTextareaHeight();
+          }
+        });
+
+        // Debounced function to update textarea height
+        const debouncedUpdateTextareaHeight = debounce(() => {
+          const initialHeight = commentField.offsetHeight;
+          commentField.style.height = 'auto';
+          const newHeight = commentField.scrollHeight + 'px';
+
+          // Check if the height has changed
+          if (initialHeight !== newHeight) {
+            commentField.style.transition = '';
+            commentField.style.height = initialHeight + 'px';
+
+            requestAnimationFrame(() => {
+              commentField.style.transition = 'height 0.3s ease';
+              commentField.style.height = newHeight;
+            });
+          }
+        }, 300);
+
+        // Handle comment saving when the textarea loses focus
+        commentField.addEventListener('blur', async () => {
+          if (currentArchiveName && commentField.value !== originalComment) {
+            await sendRequest(
+              `/edit-archive/${currentArchiveName}`,
+              {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comment: commentField.value.trim() }),
+              },
+              'Comment saved successfully!',
+              'Error saving comment.',
+              () => {
+                // Update comment badge after successful save
+                const commentBadge = document.querySelector(
+                  `.comment-badge[data-name="${currentArchiveName}"]`,
+                );
+                if (commentBadge) {
+                  commentBadge.dataset.fullComment = commentField.value;
+                  const truncatedComment =
+                    commentField.value.length > 125
+                      ? commentField.value.slice(0, 125) + '...'
+                      : commentField.value;
+                  commentBadge.textContent = truncatedComment;
+                }
+
+                resetCommentField();
+              },
+            );
+          }
+        });
+
+        // Handle clicks outside of the comment textarea and badge
+        document.addEventListener('click', (event) => {
+          const commentBadge = event.target.closest('.comment-badge');
+          const isInsideComment = commentField.contains(event.target);
+          const isCommentBadgeClicked = !!commentBadge;
+
+          if (
+            !isInsideComment &&
+            !isCommentBadgeClicked &&
+            currentArchiveName
+          ) {
+            if (commentField.value === originalComment) {
+              resetCommentField(); // Reset if comment wasn't changed
+            }
+          }
+        });
+
+        // Set the initial textarea height
+        commentField.style.height = initialTextareaHeight;
+
+        // Adjust textarea height dynamically on input
+        commentField.addEventListener('input', debouncedUpdateTextareaHeight);
+      });
+    </script>
+  </body>
+</html>
