@@ -1,5 +1,4 @@
 
-
 ---
 
 # Node Project Archive Manager
@@ -11,7 +10,7 @@ This application saves the archives in the following directory:
 ```
 const archivesDir = path.resolve('C:/Users/name/OneDrive/backup/project');
 ```
-This path can be customized based on your specific setup.
+You can adjust this path to fit your specific backup location.
 
 ## Table of Contents
 - [Installation](#installation)
@@ -20,6 +19,7 @@ This path can be customized based on your specific setup.
 - [API Documentation](#api-documentation)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
+- [Custom Configurations](#custom-configurations)
 - [License](#license)
 - [Contact](#contact)
 
@@ -47,7 +47,7 @@ This path can be customized based on your specific setup.
 
 ## Usage
 
-1. Open your browser and navigate to `http://localhost:3005`.
+1. Open your browser and navigate to `http://localhost:3005` (or your custom port, if changed).
 2. Enter a comment and select the type of archive (Full or Incremental).
 3. Click the **Create Archive** button to generate the archive.
 
@@ -162,7 +162,7 @@ node-project-archive-manager/
 │   └── css/
 │       └── archive.css
 ├── views/
-│   └── arc.ejs
+    └── arc.ejs
 ```
 
 ---
@@ -179,6 +179,27 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
+## Custom Configurations
+
+1. **Change Server Port:**
+   - To change the server port, update the following line in `archive.js`:
+     ```javascript
+     const port = process.env.PORT || 3005; // Replace 3005 with your desired port.
+     ```
+
+   You can also specify the port when starting the application by setting the `PORT` environment variable:
+   ```bash
+   PORT=4000 node archive.js
+   ```
+
+2. **Adjust Time Delays:**
+   - To modify the progress bar update interval, change the `updateInterval` value in the JavaScript:
+     ```javascript
+     let updateInterval = 10; // Adjust to the desired interval (in milliseconds).
+     ```
+
+---
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
@@ -191,4 +212,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-This version of the `README.md` includes all necessary instructions and information about the project, including the path for the archives, contributing guidelines, and a detailed API documentation.
+This version of the `README.md` includes all necessary instructions and information about the project, including how to change the port and time delays, contributing guidelines, and a detailed API documentation.
