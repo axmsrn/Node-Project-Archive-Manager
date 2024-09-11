@@ -27,7 +27,7 @@ You can adjust this path to fit your specific backup location.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/node-project-archive-manager.git
+   git clone https://github.com/axmsrn/node-project-archive-manager.git
    ```
 
 2. Navigate to the project directory:
