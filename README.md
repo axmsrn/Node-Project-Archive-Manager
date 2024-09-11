@@ -7,7 +7,7 @@
 **Node Project Archive Manager** is a web application designed for managing project archives. It allows users to create full and incremental archives, add comments, and manage archives efficiently through a user-friendly interface.
 
 This application saves the archives in the following directory:
-```
+```javascript
 const archivesDir = path.resolve('C:/Users/name/OneDrive/backup/project');
 ```
 You can adjust this path to fit your specific backup location.
@@ -51,8 +51,6 @@ You can adjust this path to fit your specific backup location.
 2. Enter a comment and select the type of archive (Full or Incremental).
 3. Click the **Create Archive** button to generate the archive.
 
----
-
 ## Features
 
 ### 1. **Create Full and Incremental Archives**
@@ -91,8 +89,6 @@ You can adjust this path to fit your specific backup location.
 
 ### 11. **Pagination and Archive Count Management**
    - The application displays archives with pagination, making it easier to navigate through large sets of archives. Users can control the number of archives displayed per page and switch between pages for efficient browsing.
-
----
 
 ## API Documentation
 
@@ -146,8 +142,6 @@ You can adjust this path to fit your specific backup location.
    - **Parameters**:
      - `name` (required): The name of the archive to extract.
 
----
-
 ## Project Structure
 
 ```
@@ -165,8 +159,6 @@ node-project-archive-manager/
     └── arc.ejs
 ```
 
----
-
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
@@ -176,8 +168,6 @@ Contributions are welcome! Please follow these steps:
 3. Make your changes and commit them with descriptive commit messages.
 4. Push your branch to your forked repository.
 5. Create a pull request to the main repository.
-
----
 
 ## Custom Configurations
 
@@ -198,18 +188,13 @@ Contributions are welcome! Please follow these steps:
      let updateInterval = 10; // Adjust to the desired interval (in milliseconds).
      ```
 
----
-
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
----
-
 ## Contact
 - Email: [axmsrn@gmail.com](mailto:axmsrn@gmail.com)
 - GitHub: [axmsrn](https://github.com/axmsrn)
+```
 
----
-
-This version of the `README.md` includes all necessary instructions and information about the project, including how to change the port and time delays, contributing guidelines, and a detailed API documentation.
+Этот `README.md` предоставляет краткое и понятное описание вашего проекта, включая инструкции по установке, использованию, основные функции, документацию API, структуру проекта, информацию о лицензии и контактные данные.
