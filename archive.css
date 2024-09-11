@@ -1,0 +1,138 @@
+/* Сброс стилей для всех элементов */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Стили для контейнера прогресса */
+.progress-container {
+  margin-top: 20px;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  display: block; /* Убедитесь, что контейнер отображается */
+}
+
+.progress-container.show {
+  opacity: 1;
+}
+
+/* Стили для прогресс-бара */
+.progress-bar {
+  background-color: #007bff;
+  transition: width 1s ease-in-out;
+}
+.progress-container {
+  margin-top: 20px;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  display: block;
+}
+
+.progress-container.show {
+  opacity: 1;
+}
+
+.progress-bar {
+  background-color: #007bff;
+  transition: width 1s ease-in-out;
+}
+
+.progress {
+  height: 25px;
+}
+
+#statusMessage {
+  min-height: 20px;
+  transition: opacity 0.5s ease-in-out;
+  opacity: 0;
+}
+
+#statusMessage.show {
+  opacity: 1;
+}
+
+.comment-badge {
+  cursor: pointer;
+}
+
+h1,
+#comment {
+  /* transition: height 0.3s ease; Smoothly adjust textarea height */
+  color: #bcbcbc;
+}
+
+/* Main pagination styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pagination .page-item {
+  list-style: none;
+}
+
+.pagination .page-link {
+  text-decoration: none;
+  color: #ddd;
+  padding: 5px 10px;
+  border: 1px solid #444;
+  border-radius: 5px;
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    box-shadow 0.3s,
+    transform 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #777;
+  cursor: not-allowed;
+}
+
+/* Active page styles */
+.pagination .page-item.active .page-link {
+  background-color: #0056b3 !important;
+  border-color: #777 !important;
+  color: #fff !important;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+  transform: translateY(0);
+  transition:
+    transform 0.1s ease-in-out,
+    background-color 0.3s,
+    box-shadow 0.3s;
+}
+
+/* Hover effect for active page */
+.pagination .page-item.active .page-link:hover {
+  background-color: #003c7a !important;
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.6);
+  border-color: #666 !important;
+}
+
+/* Active button click effect */
+.pagination .page-item.active .page-link:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Hover effect for all buttons */
+.pagination .page-link:hover {
+  background-color: #333 !important;
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.5);
+  border-color: #666 !important;
+  color: #fff !important;
+  transform: translateY(-2px);
+}
+
+/* Click effect for non-active buttons */
+.pagination .page-link:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+textarea {
+  transition: height 0.3s ease; /* Плавное изменение высоты текстового поля */
+}
