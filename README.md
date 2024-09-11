@@ -291,7 +291,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 - Email: [axmsrn@gmail.com](mailto:axmsrn@gmail.com)
-- GitHub: [your-github-profile](https://github.com/your-github-profile)
+- GitHub: [axmsrn](https://github.com/axmsrn)
 
 ---
 
