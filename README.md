@@ -195,6 +195,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Contact
 - Email: [axmsrn@gmail.com](mailto:axmsrn@gmail.com)
 - GitHub: [axmsrn](https://github.com/axmsrn)
-```
-
-Этот `README.md` предоставляет краткое и понятное описание вашего проекта, включая инструкции по установке, использованию, основные функции, документацию API, структуру проекта, информацию о лицензии и контактные данные.
