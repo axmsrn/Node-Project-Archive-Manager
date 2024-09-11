@@ -13,8 +13,8 @@ const {
 
 const app = express();
 const router = express.Router();
-const archivesDir = path.resolve('C:/Users/alex/OneDrive/backup/worklog');
-const projectPath = path.resolve(__dirname, '..'); // Points to D:\Projects\WorkLog
+const archivesDir = path.resolve('C:/Users/user/OneDrive/backup/project');
+const projectPath = path.resolve(__dirname, '..'); // Points to D:\Projects\project
 const projectName = path.basename(projectPath); // Will be 'worklog'
 
 // Configure middleware
