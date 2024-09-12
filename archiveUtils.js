@@ -5,7 +5,7 @@ const archiver = require('archiver');
 const unzipper = require('unzipper');
 const glob = require('glob');
 
-const archivesDir = path.resolve('C:/Users/alex/OneDrive/backup/worklog');
+const archivesDir = path.resolve('D:/backup/project');
 const projectPath = path.resolve(__dirname, '..'); // Points to D:\Projects\WorkLog
 const projectName = path.basename(projectPath).toLowerCase(); // Will be 'worklog'
 const projectPathMeta = path.resolve(__dirname, ''); // Path for metadata
