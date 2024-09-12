@@ -8,7 +8,7 @@
 
 This application saves the archives in the following directory:
 ```javascript
-const archivesDir = path.resolve('C:/Users/name/OneDrive/backup/project');
+const archivesDir = path.resolve('D:/backup/project');
 ```
 You can adjust this path to fit your specific backup location.
 
