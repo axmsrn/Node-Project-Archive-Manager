@@ -50,6 +50,7 @@ You can adjust this path to fit your specific backup location.
 1. Open your browser and navigate to `http://localhost:3005` (or your custom port, if changed).
 2. Enter a comment and select the type of archive (Full or Incremental).
 3. Click the **Create Archive** button to generate the archive.
+   
 ![image](https://github.com/user-attachments/assets/5ce58c9a-19ef-4298-9596-92cdecb31f44)
 
 ## Features
