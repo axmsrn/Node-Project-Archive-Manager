@@ -1,44 +1,39 @@
-//archiveUtils.js
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 const unzipper = require('unzipper');
 const glob = require('glob');
 
-const archivesDir = path.resolve('D:/backup/project');
+const archivesDir = path.resolve('d:/backup/projects');
 const projectPath = path.resolve(__dirname, '..'); // Points to D:\Projects\WorkLog
 const projectName = path.basename(projectPath).toLowerCase(); // Will be 'worklog'
 const projectPathMeta = path.resolve(__dirname, ''); // Path for metadata
 const metadataFile = path.join(archivesDir, 'metadata.json');
 
-// Watched files patterns
+// Watched files  patterns
 const watchedFiles = [
-  'routes/**/*.js',
-  'controllers/**/*.js',
-  'views/**/*.*',
-  'public/**/*.*',
-  '!public/uploads/*.*',
-  '*.js',
-  '*.json',
-  '*.db',
-  '.env',
-  '*.txt',
-  '*.bat',
+  '**/*.*',  // Include all files
+  '!node_modules/**',  // Exclude the entire node_modules directory
+  '!temp/**', 
+  '!**/*.db-*',
 ];
 
 // Separate included and excluded patterns
 const includedFiles = watchedFiles.filter(
-  (pattern) => !pattern.startsWith('!'),
+  (pattern) => !pattern.startsWith('!')
 );
 const excludedFiles = watchedFiles
   .filter((pattern) => pattern.startsWith('!'))
   .map((pattern) => pattern.slice(1));
 
 // Function to load archives
-function loadArchives() {
+function loadArchives(filterByProjectName = true) {
   const files = fs.readdirSync(archivesDir);
   return files
-    .filter((file) => file.endsWith('.zip'))
+    .filter(
+      (file) => file.endsWith('.zip') && (!filterByProjectName || file.includes(projectName))
+      // Если filterByProjectName === true, фильтруем по имени проекта, иначе показываем все архивы
+    )
     .map((file) => {
       const baseName = file.slice(0, -'.zip'.length);
       const commentPath = path.join(archivesDir, `${baseName}.txt`);
@@ -55,6 +50,7 @@ function loadArchives() {
     })
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 }
+
 
 // Function to generate archive name
 function generateArchiveName(type) {
@@ -103,22 +99,9 @@ function updateMetadata() {
   }
 
   includedFiles.forEach((pattern) => {
-    const files = glob.sync(pattern, { cwd: projectPathMeta, absolute: true });
+    const files = glob.sync(pattern, { cwd: projectPathMeta, absolute: true, ignore: excludedFiles });
     files.forEach((filePath) => {
-      if (
-        !excludedFiles.some((exclusionPattern) =>
-          glob.hasMagic(exclusionPattern)
-            ? glob
-                .sync(exclusionPattern, {
-                  cwd: projectPathMeta,
-                  absolute: true,
-                })
-                .includes(filePath)
-            : filePath.includes(exclusionPattern),
-        )
-      ) {
-        addFileMetadata(filePath);
-      }
+      addFileMetadata(filePath);
     });
   });
 
@@ -145,7 +128,6 @@ function getChangedFiles() {
           fileMetadata.size !== stats.size;
         if (fileChanged) {
           changedFiles.push(filePath);
-          console.log(`File changed: ${filePath}`);
         }
       } else if (stats.isDirectory()) {
         fs.readdirSync(filePath).forEach((file) =>
@@ -156,22 +138,9 @@ function getChangedFiles() {
   }
 
   includedFiles.forEach((pattern) => {
-    const files = glob.sync(pattern, { cwd: projectPathMeta, absolute: true });
+    const files = glob.sync(pattern, { cwd: projectPathMeta, absolute: true, ignore: excludedFiles });
     files.forEach((filePath) => {
-      if (
-        !excludedFiles.some((exclusionPattern) =>
-          glob.hasMagic(exclusionPattern)
-            ? glob
-                .sync(exclusionPattern, {
-                  cwd: projectPathMeta,
-                  absolute: true,
-                })
-                .includes(filePath)
-            : filePath.includes(exclusionPattern),
-        )
-      ) {
-        checkFileChanges(filePath);
-      }
+      checkFileChanges(filePath);
     });
   });
 
@@ -181,7 +150,6 @@ function getChangedFiles() {
   };
 }
 
-// Function to create an archive
 function createArchive(type, comment, res) {
   const { changedFiles, hasChanges } = getChangedFiles();
   if (type === 'inc' && !hasChanges) {
@@ -201,7 +169,7 @@ function createArchive(type, comment, res) {
     const changedFileNames = changedFiles.map((filePath) =>
       path.basename(filePath),
     );
-    comment += `\nChanged files:\n${changedFileNames.join('\n')}`;
+    comment += `\nChanged files: ${changedFileNames.join(', ')}`;
   }
 
   output.on('close', () => {
@@ -216,29 +184,18 @@ function createArchive(type, comment, res) {
 
   archive.pipe(output);
 
+  // Adding files to archive based on type
   if (type === 'full') {
     includedFiles.forEach((filePattern) => {
       const files = glob.sync(filePattern, {
         cwd: projectPathMeta,
         absolute: true,
+        ignore: excludedFiles,  // Use the ignore option to skip excluded files
       });
       files.forEach((filePath) => {
-        if (
-          !excludedFiles.some((exclusionPattern) =>
-            glob.hasMagic(exclusionPattern)
-              ? glob
-                  .sync(exclusionPattern, {
-                    cwd: projectPathMeta,
-                    absolute: true,
-                  })
-                  .includes(filePath)
-              : filePath.includes(exclusionPattern),
-          )
-        ) {
-          archive.file(filePath, {
-            name: path.relative(projectPathMeta, filePath),
-          });
-        }
+        archive.file(filePath, {
+          name: path.relative(projectPathMeta, filePath),
+        });
       });
     });
   } else if (type === 'inc') {
@@ -314,7 +271,13 @@ async function extractArchive(name, res) {
         if (entry.type === 'Directory') {
           fs.mkdirSync(fullPath, { recursive: true });
         } else {
-          entry.pipe(fs.createWriteStream(fullPath));
+          const writeStream = fs.createWriteStream(fullPath);
+          entry.pipe(writeStream);
+          writeStream.on('error', (err) => {
+            console.error(`Error writing file ${fullPath}: ${err.message}`);
+            // Optionally, skip problematic files
+            entry.autodrain(); // This ensures the extraction continues
+          });
         }
       })
       .promise();
@@ -324,6 +287,7 @@ async function extractArchive(name, res) {
     res.status(500).json({ success: false, error: err.message });
   }
 }
+
 
 module.exports = {
   loadArchives,
